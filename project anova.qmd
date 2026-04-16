@@ -1,0 +1,57 @@
+---
+title: "FINAL REPORT ANOVA"
+author: "NIKHIL AND MANISH"
+format: pdf
+editor: visual
+---
+
+## IMPACT OF SEX AND FASTING BLOOD SUGAR ON MAXIMUM HEART RATE
+
+We analyzed how biological sex and fasting blood sugar (fbs) affect maximum heart rate ( thalach ) in a clinical heart-disease dataset (N=123). Chest pain type ( cp ) was treated as a random effect to account for inter-patient variability, while sex (Male/Female) and fbs (≤120 vs \>120 mg/dL) were fixed factors.
+
+## 
+NULL AND ALTERNATIVE HYPOTHESIS
+
+We formulated :
+
+$H_0$ : No main or interaction effect of `sex` or `fbs` on `thalach.`
+
+$H_A$ : At least one effect exist.
+
+Understanding these effects can inform cardiovascular risk assessment, since e.g. dysregulated glucose can influence cardiac function. We compare models with and without interactions, use AIC to select best model among them and perform ANOVA to test significance.
+
+##  DATASET SUMMARY
+
+We used R (v4.x) for all analyses. The dataset (a heart-disease cohort) originally had 303 rows; after filtering for Switzerland (and removing missing data, see Appendix), 123 observations remained with four variables: `sex` (factor: Female, Male), `cp` (factor 1–4), `fbs` (binary factor, 0/1 for fasting glucose ≤ or \>120 mg/dL), and the response `thalach` (numeric). We cleaned data by excluding irrelevant columns (age, cholesterol, etc.), imputing any remaining NAs with column means, and encoding categorical factors appropriately.
+
+## METHODS USED
+
+We used R (v4.x) for all analyses.
+
+Our analysis plan was to fit linear models of increasing complexity:
+
+-   fit1 : fixed-effects ANOVA with main effects (sex + fbs). (simple model)
+
+-   fit2 : fixed-effects ANOVA with interaction (sex \* cp + fbs)
+
+-   fit3 : mixed-effects model using lme4’s lmer() : thalach \~ sex + fbs + (1 \| cp) (cp as random intercept).
+
+We compared models using Akaike’s Information Criterion (AIC): lower AIC indicates a more parsimonious fit. For inference, we used type-I ANOVA on fit3 to test fixed effects (via anova(fit3) ), noting that likelihood-based (REML=FALSE) fitting was used for comparability across models. Post-hoc pairwise contrasts were computed with the emmeans package 3 to explore significant effects (e.g. comparing mean thalach between fbs groups). We also checked model assumptions: Shapiro–Wilk test and Q-Q plots assessed normality of residuals, and Levene’s test assessed homogeneity of variance. All plots (boxplots, diagnostic plots) were created with ggplot2 for visualisation.
+
+## 
+RESULTS
+
+-   **Model Comparisons (AIC)**: The mixed-effects model (fit3) had the lowest AIC (1150.19) compared to the main-effects ANOVA (fit1: 1153.78) and the interaction ANOVA (fit2: 1157.77). This indicates fit3 best balances fit and complexity.
+
+-   **ANOVA (fixed effects in fit3)**: In fit3, ANOVA gave **F(1,? )=1.98** for sex (p\>0.05) and **F(1,? )=4.29** for fbs (p\<0.05). Thus, `sex` had no significant effect on `thalach` , whereas `fbs` significantly affected it. (Chest pain type had near-zero variance as a random effect, and the model was “singular”, indicating `cp` explained little additional variance.)
+
+-   **ANOVA TABLE FOR FIT3**
+
+    ```         
+    Analysis of Variance Table
+        npar Sum Sq Mean Sq F value
+    sex    1 1209.8  1209.8  1.9789
+    fbs    2 5245.1  2622.6  4.2896
+    ```
+
+-   **Post-hoc contrasts:** Estimated marginal means from fit3 showed no significant difference between males and females (contrasts p\>0.1), but a significant difference between `FBS` groups. Specifically, patients with high fasting glucose (\>120) had a lower mean `thalach` than those with normal `FBS` (adjusted p\<0.05 by emmeans ).
